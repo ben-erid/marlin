@@ -43,12 +43,13 @@ async function emptyCart(page: Page): Promise<void> {
 async function findLatestOrderId(page: Page): Promise<string | null> {
   await page.goto(BASE_URL + 'user/my_orders', { timeout: 30_000 });
   await page.waitForTimeout(2_000);
+  // Orders are sorted ASC — last links are newest; iterate bottom-up
   const links = await page.locator('a[href*="/view/"]').all();
-  for (const link of links) {
-    const href = await link.getAttribute('href') || '';
-    const text = await link.innerText();
+  for (let i = links.length - 1; i >= 0; i--) {
+    const href = await links[i].getAttribute('href') || '';
+    const text = await links[i].innerText();
     const m = href.match(/\/view\/([a-z0-9]+)\/\1/);
-    if (m && text === m[1]) {
+    if (m && text.trim() === m[1]) {
       return m[1];
     }
   }
